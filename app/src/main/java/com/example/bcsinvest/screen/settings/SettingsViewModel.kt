@@ -1,7 +1,11 @@
-package com.example.bcsinvest.screen
+package com.example.bcsinvest.screen.settings
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.bcsinvest.gate.Gate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SettingsViewModel: ViewModel() {
 
@@ -11,8 +15,15 @@ class SettingsViewModel: ViewModel() {
     val billType = MutableLiveData<BillType>(BillType.IIS())
     val isRegularUp = MutableLiveData(false)
     val regularSum = MutableLiveData(1000f)
-
+    val gate = Gate.getInstance()
     val curState = MutableLiveData<State>()
+
+
+    fun getData(){
+        viewModelScope.launch(Dispatchers.IO) {
+            gate.getMainDataList(InvestCurrency.RUR)
+        }
+    }
 
 
 

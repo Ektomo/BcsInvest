@@ -1,4 +1,4 @@
-package com.example.bcsinvest.screen
+package com.example.bcsinvest.screen.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,14 +23,17 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
     val billType = viewModel.billType.observeAsState()
     val isRegularUp = viewModel.isRegularUp.observeAsState()
     val regularSum = viewModel.regularSum.observeAsState()
+    val startLoading = remember {
+        mutableStateOf(false)
+    }
     val yearPeriod = remember {
         mutableStateOf(viewModel.investPeriod.value?.div(12).toString())
     }
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
         item {
             Text(
@@ -56,7 +59,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
             Slider(
                 value = investPeriod.value!!,
                 onValueChange = { viewModel.investPeriod.value = it },
-                valueRange = 0f..120f,
+                valueRange = if(billType.value!!.value == "ИИС") 36f..120f else 0f..120f,
             )
         }
 
@@ -108,7 +111,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
                 textAlign = TextAlign.Start,
                 fontSize = 18.sp
             )
-            SwitchValueBill(list = listOf(BillType.IIS().value,BillType.Simple().value), billType, viewModel)
+            SwitchValueBill(list = listOf(BillType.IIS().value, BillType.Simple().value), billType, viewModel)
         }
 
 
@@ -152,11 +155,33 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
                 enabled = isRegularUp.value!!
             )
 
-            Spacer(modifier = Modifier.padding(36.dp))
+            Spacer(modifier = Modifier.padding(16.dp))
 
         }
 
+        item{
 
+            Button(onClick = { startLoading.value = true }) {
+                Text(
+                    text = "Собрать портфель",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.padding(44.dp))
+        }
+
+
+    }
+
+    LaunchedEffect(key1 = startLoading.value){
+        if (startLoading.value){
+            viewModel.getData()
+            startLoading.value = false
+        }
     }
 
 

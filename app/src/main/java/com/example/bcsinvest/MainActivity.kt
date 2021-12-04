@@ -22,8 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bcsinvest.navigation.NavigationItem
-import com.example.bcsinvest.screen.SettingsView
-import com.example.bcsinvest.screen.SettingsViewModel
+import com.example.bcsinvest.screen.settings.SettingsView
+import com.example.bcsinvest.screen.settings.SettingsViewModel
 import com.example.bcsinvest.ui.theme.BcsInvestTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
