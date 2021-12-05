@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.nextDown
 import kotlin.math.roundToInt
 
-class GraphViewModel: ViewModel() {
+class GraphViewModel : ViewModel() {
     val date = LocalDate.now()
     val gate = Gate.getInstance()
     val investPeriod = MutableLiveData(36f)
@@ -53,34 +53,24 @@ class GraphViewModel: ViewModel() {
 //    }
 
 
-
-
-
-
-
-
-
-
-
-
     fun getData() {
         viewModelScope.launch(Dispatchers.IO) {
-            try{
+            try {
                 curState.postValue(State.Loading)
                 val sum = investSum.value!!.roundToInt()
                 val period = investPeriod.value!!.toInt()
                 val map = mutableMapOf<Double, Security>()
-                val monthlyRepay = if(isRegularUp.value!!) regularSum.value!!.toInt() else 0
+                val monthlyRepay = if (isRegularUp.value!!) regularSum.value!!.toInt() else 0
                 val curr = currency.value!!
 
 
                 val list = gate.getMainDataList(curr)
                 val filterList = list.filter {
                     it.matDate != "0000-00-00" &&
-                    ChronoUnit.DAYS.between(
-                        LocalDate.now(),
-                        LocalDate.parse(it.matDate)
-                    ) > (period + 365)
+                            ChronoUnit.DAYS.between(
+                                LocalDate.now(),
+                                LocalDate.parse(it.matDate)
+                            ) > (period + 365)
                 }
                 if (filterList.isNotEmpty()) {
                     filterList.forEach {
@@ -94,12 +84,17 @@ class GraphViewModel: ViewModel() {
 
                 val sortDs = map.keys.sortedBy { it.nextDown() }.reversed()
                 val bag =
-                    calculateListSecurity(sortDs, map, sum, monthRepay = monthlyRepay, months = period)
+                    calculateListSecurity(
+                        sortDs,
+                        map,
+                        sum,
+                        monthRepay = monthlyRepay,
+                        months = period
+                    )
                 curState.postValue(State.Data(bag))
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 curState.postValue(State.Error(e))
             }
-
 
 
         }
@@ -166,7 +161,7 @@ class GraphViewModel: ViewModel() {
         for (i in 1..months) {
 
             bag.forEach { cs ->
-                if (i % (cs.period/30) == 0) {
+                if (i % (cs.period / 30) == 0) {
                     s += (cs.rateForCouponTime * cs.count)
                 }
             }
@@ -185,7 +180,7 @@ class GraphViewModel: ViewModel() {
                     s = sCs.sumAfter
                     cs.count += sCs.count
                 }
-                if (i == months && i % 12 != 0){
+                if (i == months && i % 12 != 0) {
                     yearsCount++
                     rate = bag.sumOf { it.rateProc } / bag.count()
                     val rateC = (mainS / 100 * rate).roundToInt()
@@ -256,11 +251,10 @@ class GraphViewModel: ViewModel() {
 
     sealed class State() {
         object Loading : State()
-        object Default: State()
+        object Default : State()
         class Error(val e: Exception) : State()
-        class Data(val data: BagResult): State()
+        class Data(val data: BagResult) : State()
     }
-
 
 
 }
