@@ -145,7 +145,7 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                                 HorizontalBarsChart(data = it)
                                 Spacer(modifier = Modifier.requiredSize(8.dp))
                             }
-                            Spacer(modifier = Modifier.requiredSize(36.dp))
+                            Spacer(modifier  = Modifier.requiredSize(36.dp))
                         }
                     }
 
