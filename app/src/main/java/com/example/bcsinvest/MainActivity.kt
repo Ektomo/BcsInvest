@@ -1,6 +1,7 @@
 package com.example.bcsinvest
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
@@ -45,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
             val systemUiController = rememberSystemUiController()
             val useDarkIcons = MaterialTheme.colors.isLight
-
+            val context = LocalContext.current
 
 
 
@@ -53,7 +55,9 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     floatingActionButton = {
 
-                            FloatingActionButton(onClick = {}
+                            FloatingActionButton(onClick = {
+                                Toast.makeText(context, " Форма Оставить заявку", Toast.LENGTH_SHORT).show()
+                            }
                             ) {
                                 Icon(Icons.Default.Send, contentDescription = "Создать новую")
 

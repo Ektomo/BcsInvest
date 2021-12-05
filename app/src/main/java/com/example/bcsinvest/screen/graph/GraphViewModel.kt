@@ -22,7 +22,7 @@ class GraphViewModel: ViewModel() {
     val isRegularUp = MutableLiveData(false)
     val regularSum = MutableLiveData(0f)
     val needLoad = MutableLiveData(false)
-    val curState = MutableLiveData<State>(State.Loading)
+    val curState = MutableLiveData<State>(State.Default)
 
 
 
@@ -48,6 +48,7 @@ class GraphViewModel: ViewModel() {
 
                 val list = gate.getMainDataList(curr)
                 val filterList = list.filter {
+                    it.matDate != "0000-00-00" &&
                     ChronoUnit.DAYS.between(
                         LocalDate.now(),
                         LocalDate.parse(it.matDate)
@@ -156,6 +157,14 @@ class GraphViewModel: ViewModel() {
                     s = sCs.sumAfter
                     cs.count += sCs.count
                 }
+                if (i == months - 1 && i % 12 != 0){
+                    yearsCount++
+                    rate = bag.sumOf { it.rateProc } / bag.count()
+                    val rateC = (mainS / 100 * rate).roundToInt()
+                    val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
+                    mainS += rateC
+                    yearsAndResults[yearsCount] = res
+                }
             }
 
 
@@ -215,6 +224,7 @@ class GraphViewModel: ViewModel() {
 
     sealed class State() {
         object Loading : State()
+        object Default: State()
         class Error(val e: Exception) : State()
         class Data(val data: BagResult): State()
     }

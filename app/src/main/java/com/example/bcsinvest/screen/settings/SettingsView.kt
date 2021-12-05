@@ -100,7 +100,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel, gra
             Slider(
                 value = investSum.value!!,
                 onValueChange = { viewModel.investSum.value = it },
-                valueRange = 0f..5000000f
+                valueRange = 1f..5000000f
             )
         }
 
