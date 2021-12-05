@@ -185,15 +185,17 @@ class GraphViewModel: ViewModel() {
                     s = sCs.sumAfter
                     cs.count += sCs.count
                 }
-                if (i == months - 1 && i % 12 != 0){
+                if (i == months && i % 12 != 0){
+                    yearsCount++
                     rate = bag.sumOf { it.rateProc } / bag.count()
                     val rateC = (mainS / 100 * rate).roundToInt()
                     val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
                     mainS += rateC
-                    val fin = yearsAndResults[yearsCount]
-                    fin!!.afterSum = res.afterSum
-                    fin.rate = res.rate
-                    fin.sum = res.sum
+                    yearsAndResults[yearsCount] = res
+//                    val fin = yearsAndResults[yearsCount]
+//                    fin!!.afterSum = res.afterSum
+//                    fin.rate = res.rate
+//                    fin.sum = res.sum
                 }
             }
 

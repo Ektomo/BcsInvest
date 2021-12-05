@@ -1,5 +1,6 @@
 package com.example.bcsinvest.screen.graph
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
@@ -28,15 +29,18 @@ import hu.ma.charts.bars.HorizontalBarsChart
 import hu.ma.charts.bars.data.HorizontalBarsData
 import hu.ma.charts.bars.data.StackedBarData
 import hu.ma.charts.bars.data.StackedBarEntry
+import hu.ma.charts.legend.data.LegendAlignment
 import hu.ma.charts.legend.data.LegendPosition
+import hu.ma.charts.line.LineChart
+import hu.ma.charts.line.data.AxisLabel
+import hu.ma.charts.line.data.DrawAxis
+import hu.ma.charts.line.data.LineChartData
 import hu.ma.charts.pie.PieChart
 import hu.ma.charts.pie.data.PieChartData
 import hu.ma.charts.pie.data.PieChartEntry
 import java.lang.IllegalStateException
 import java.time.LocalDate
 import kotlin.math.roundToInt
-
-
 
 
 val SimpleColors = listOf(
@@ -50,7 +54,6 @@ val SimpleColors = listOf(
     Color.Green,
     Color.Gray,
 )
-
 
 
 private fun createBars(
@@ -151,15 +154,18 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                             Spacer(modifier = Modifier.requiredSize(12.dp))
                             HorizontalBarsChart(data = data)
                             Spacer(modifier = Modifier.padding(30.dp))
-                            Text("Подробная информация о портфеле на каждый год", style = MaterialTheme.typography.h6)
+                            Text(
+                                "Подробная информация о портфеле на каждый год",
+                                style = MaterialTheme.typography.h6
+                            )
                             Spacer(modifier = Modifier.requiredSize(12.dp))
                             bars.forEach {
+                                Spacer(modifier = Modifier.padding(8.dp))
                                 HorizontalBarsChart(data = it)
-                                Spacer(modifier = Modifier.requiredSize(8.dp))
                             }
-                            Spacer(modifier  = Modifier.requiredSize(36.dp))
 
-
+//                            LinesSimpleScreen()
+                            Spacer(modifier = Modifier.requiredSize(36.dp))
 
 
                         }
@@ -167,7 +173,7 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
 
                 }
             }
-            is GraphViewModel.State.Error ->  {
+            is GraphViewModel.State.Error -> {
                 Text(text = state.e.localizedMessage ?: "Неизвестная ошибка")
 
             }
@@ -178,7 +184,11 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Заполните данные и нажмите собрать портфель на первом экране", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                        Text(
+                            text = "Заполните данные и нажмите собрать портфель на первом экране",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
 
@@ -206,13 +216,14 @@ fun investCard(
     currency: InvestCurrency,
     months: Int
 ) {
+    val cur = if (currency == InvestCurrency.RUR) "Р" else "$"
     val rate =
         bagResult.yearsAndResults.values.sumOf { it.rateProc } / bagResult.yearsAndResults.count()
     val lastIdx = bagResult.yearsAndResults.count()
-    Column() {
+    Column {
         val str1 = (bagResult.yearsAndResults[1]!!.sum).toString().formatByNumber(" ")
         Text(
-            "Инвестиции сегодня: $str1",
+            "Инвестиции сегодня: $str1 $cur",
             style = MaterialTheme.typography.h6,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
@@ -220,7 +231,7 @@ fun investCard(
         Spacer(modifier = Modifier.padding(8.dp))
         val str2 = repaySum.toString().formatByNumber(" ")
         Text(
-            text = "Средняя доходность за все время ${if (isRepay) ",\n при пополнении счета на $str2 ежемесячно" else ""}:\n ${
+            text = "Средняя доходность за все время ${if (isRepay) ",\n при пополнении счета на $str2 $cur ежемесячно" else ""}:\n ${
                 String.format(
                     "%2.2f",
                     rate
@@ -231,17 +242,19 @@ fun investCard(
             style = MaterialTheme.typography.subtitle1
         )
         Spacer(modifier = Modifier.padding(8.dp))
-        val str3 = (bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate + bagResult.yearsAndResults[lastIdx]!!.afterSum).toString().formatByNumber(" ")
+        val str3 =
+            (bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate).toString()
+                .formatByNumber(" ")
         Text(
-            text = "Через $months месяцев вы получите:\n $str3",
+            text = "Через $months месяцев вы получите:\n $str3 $cur",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.subtitle1
         )
         Spacer(modifier = Modifier.padding(8.dp))
-        val str4 = (bagResult.yearsAndResults[lastIdx]!!.rate).toString().formatByNumber(" ")
+        val str4 = (bagResult.yearsAndResults.values.sumOf { it.rate }).toString().formatByNumber(" ")
         Text(
-            text = "Прибыль составит:\n $str4",
+            text = "Прибыль составит:\n $str4 $cur",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.subtitle1
@@ -250,3 +263,535 @@ fun investCard(
 
     }
 }
+
+//Дальше пример как рисовать графики по другому, рабочего кода там нет
+
+//@Composable
+//fun LinesSimpleScreen() {
+//    Column(
+//        modifier = Modifier.fillMaxSize(),
+//        verticalArrangement = Arrangement.spacedBy(24.dp),
+////        contentPadding = PaddingValues(
+////            top = 24.dp,
+////            bottom = 24.dp,
+////        ),
+//    ) {
+//        LinesSampleData.forEach { (title, data) ->
+////            item {
+//                Column {
+//                    Text(title, style = MaterialTheme.typography.h6)
+//                    Spacer(modifier = Modifier.requiredSize(12.dp))
+//
+//
+//                    LineChart(
+//                        chartHeight = 400.dp,
+//                        data = data,
+//                        onDrillDown = { xIndex, allSeries ->
+//                            Log.d(
+//                                "LineChart",
+//                                "You are drilling down at xIndex=$xIndex, series values at this index: ${
+//                                    allSeries.map { it.points.find { point -> point.x == xIndex } }
+//                                        .map { it?.value }
+//                                        .joinToString()
+//                                }"
+//                            )
+//                        }
+//                    )
+//                }
+////            }
+//
+////            item {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 16.dp, vertical = 8.dp),
+//                ) {
+//                    Text(title, style = MaterialTheme.typography.h6)
+//                    Spacer(modifier = Modifier.requiredSize(12.dp))
+//                    LineChart(
+//                        chartHeight = 400.dp,
+//                        data = LinesSampleData.first().second.copy(legendPosition = LegendPosition.Top),
+//                        onDrillDown = { xIndex, allSeries ->
+//                            Log.d(
+//                                "LineChart",
+//                                "You are drilling down at xIndex=$xIndex, series values at this index: ${
+//                                    allSeries.map { it.points.find { point -> point.x == xIndex } }
+//                                        .map { it?.value }
+//                                        .joinToString()
+//                                }"
+//                            )
+//                        },
+//                        legend = { position, entries ->
+//                            Text(text = "Showing series: ")
+//                            entries.forEachIndexed { index, item ->
+//                                Text(text = "${item.text}")
+//                                if (index != entries.lastIndex) {
+//                                    Text(text = ", ")
+//                                }
+//                            }
+//                        }
+//                    )
+//                }
+////            }
+//        }
+//
+//    }
+//
+//
+//}
+
+
+
+//val Categories = listOf(
+//    "Teams",
+//    "Locations",
+//    "Devices",
+//    "People",
+//    "Laptops",
+//    "Titles",
+//    "Flowers",
+//    "Bugs",
+//    "Windows",
+//    "Screens",
+//    "Colors",
+//    "Bottles",
+//    "Cars",
+//    "Tricks",
+//)
+//
+//internal val LinesSampleData = listOf(
+//    "Lines" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red
+//            ),
+//            LineChartData.SeriesData(
+//                "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue
+//            ),
+//        ),
+//        xLabels = listOf("Year 1", "2", "3", "4", "5", "6")
+//    ),
+//    "Gradient fill" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//    ),
+//    "Y-axis labels" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//    ),
+//    "Y-axis labels w/lines" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//    ),
+//    "Legend top" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Top,
+//    ),
+//    "Legend bottom" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Bottom,
+//    ),
+//    "Legend start" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Start,
+//    ),
+//    "Legend end" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.End,
+//    ),
+//    "Legend end, vertical alignment" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.End,
+//        legendAlignment = LegendAlignment.Center,
+//    ),
+//    "Legend bottom, center alignment" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        xLabels = listOf("A", "B", "C", "D", "E", "F"),
+//        yLabels = listOf(
+//            AxisLabel(0f, "0K"),
+//            AxisLabel(20f, "20K"),
+//            AxisLabel(40f, "40K"),
+//        ),
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Bottom,
+//        legendAlignment = LegendAlignment.Center,
+//    ),
+//    "Autogenerated Y-labels" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 0f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 20.0f),
+//                    LineChartData.SeriesData.Point(3, 30.0f),
+//                    LineChartData.SeriesData.Point(4, 50.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20f),
+//                    LineChartData.SeriesData.Point(1, 10.0f),
+//                    LineChartData.SeriesData.Point(2, 5.0f),
+//                    LineChartData.SeriesData.Point(3, 15.0f),
+//                    LineChartData.SeriesData.Point(4, 30.0f),
+//                    LineChartData.SeriesData.Point(5, 35.0f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        xLabels = listOf("A", "B", "C", "D", "E", "F"),
+//        autoYLabels = true,
+//        maxYLabels = 4,
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Bottom,
+//        legendAlignment = LegendAlignment.Center,
+//    ),
+//    "Floating y-value" to LineChartData(
+//        series = listOf(
+//            LineChartData.SeriesData(
+//                title = "Line A",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 15_000f),
+//                    LineChartData.SeriesData.Point(1, 10_000f),
+//                    LineChartData.SeriesData.Point(2, 20_000f),
+//                    LineChartData.SeriesData.Point(3, 30_000f),
+//                    LineChartData.SeriesData.Point(4, 50_000f),
+//                    LineChartData.SeriesData.Point(5, 35_000f),
+//                ),
+//                Color.Red, gradientFill = true
+//            ),
+//            LineChartData.SeriesData(
+//                title = "Line B",
+//                points = listOf(
+//                    LineChartData.SeriesData.Point(0, 20_000f),
+//                    LineChartData.SeriesData.Point(1, 10_000f),
+//                    LineChartData.SeriesData.Point(2, 18_000f),
+//                    LineChartData.SeriesData.Point(3, 15_000f),
+//                    LineChartData.SeriesData.Point(4, 30_000f),
+//                    LineChartData.SeriesData.Point(5, 35_000f),
+//                ),
+//                Color.Blue, gradientFill = true
+//            ),
+//        ),
+//        xLabels = listOf("A", "B", "C", "D", "E", "F"),
+//        autoYLabels = true,
+//        maxYLabels = 4,
+//        floatingYValue = true,
+//        drawAxis = DrawAxis.X,
+//        horizontalLines = true,
+//        legendPosition = LegendPosition.Bottom,
+//        legendAlignment = LegendAlignment.Center,
+//    ),
+//)
+//
+//private fun createBars(withColor: Boolean) = listOf(
+//    listOf(12f, 2f, 3f, 2f),
+//    listOf(3f, 2f, 4f, 5f),
+//    listOf(1f, 4f, 12f, 5f),
+//    listOf(1f, 20f, 2f, 1f),
+//).mapIndexed { idx, values ->
+//    StackedBarData(
+//        title = AnnotatedString("Bars $idx"),
+//        entries = values.mapIndexed { index, value ->
+//            StackedBarEntry(
+//                text = AnnotatedString(Categories[index]),
+//                value = value,
+//                color = SimpleColors[index].takeIf { withColor }
+//            )
+//        }
+//    )
+//}
