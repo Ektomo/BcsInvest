@@ -7,6 +7,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -20,15 +21,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.bcsinvest.data.BagResult
 import com.example.bcsinvest.data.InvestCurrency
+import com.example.bcsinvest.formatByNumber
 
 import com.example.bcsinvest.screen.LoadingView
 import hu.ma.charts.bars.HorizontalBarsChart
 import hu.ma.charts.bars.data.HorizontalBarsData
 import hu.ma.charts.bars.data.StackedBarData
 import hu.ma.charts.bars.data.StackedBarEntry
+import hu.ma.charts.legend.data.LegendPosition
+import hu.ma.charts.pie.PieChart
+import hu.ma.charts.pie.data.PieChartData
+import hu.ma.charts.pie.data.PieChartEntry
 import java.lang.IllegalStateException
 import java.time.LocalDate
 import kotlin.math.roundToInt
+
+
 
 
 val SimpleColors = listOf(
@@ -42,6 +50,8 @@ val SimpleColors = listOf(
     Color.Green,
     Color.Gray,
 )
+
+
 
 private fun createBars(
     map: Map<String, List<Int>>,
@@ -105,12 +115,14 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                         )
 
                         val bars = mutableListOf<HorizontalBarsData>()
-                        state.data.yearsAndResults.forEach { t, u ->
+                        state.data.yearsAndResults.forEach { (t, u) ->
                             bars.add(
                                 HorizontalBarsData(
                                     bars = createBars(
                                         mapOf(
-                                            "${date.year + t}" to listOf(
+//                                            "${date.year + t - 1}"
+                                            "${t}-й год"
+                                                    to listOf(
                                                 u.sum,
                                                 u.rate,
                                                 u.afterSum
@@ -134,18 +146,22 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                                 currency = graphViewModel.currency.value!!,
                                 months = graphViewModel.investPeriod.value!!.toInt()
                             )
-
-                            Text("Состав", style = MaterialTheme.typography.h6)
+                            Spacer(modifier = Modifier.padding(30.dp))
+                            Text("Портфель", style = MaterialTheme.typography.h6)
                             Spacer(modifier = Modifier.requiredSize(12.dp))
                             HorizontalBarsChart(data = data)
-                            Spacer(modifier = Modifier.requiredSize(30.dp))
-                            Text("Подробный График по годам", style = MaterialTheme.typography.h6)
+                            Spacer(modifier = Modifier.padding(30.dp))
+                            Text("Подробная информация о портфеле на каждый год", style = MaterialTheme.typography.h6)
                             Spacer(modifier = Modifier.requiredSize(12.dp))
                             bars.forEach {
                                 HorizontalBarsChart(data = it)
                                 Spacer(modifier = Modifier.requiredSize(8.dp))
                             }
                             Spacer(modifier  = Modifier.requiredSize(36.dp))
+
+
+
+
                         }
                     }
 
@@ -194,15 +210,17 @@ fun investCard(
         bagResult.yearsAndResults.values.sumOf { it.rateProc } / bagResult.yearsAndResults.count()
     val lastIdx = bagResult.yearsAndResults.count()
     Column() {
+        val str1 = (bagResult.yearsAndResults[1]!!.sum).toString().formatByNumber(" ")
         Text(
-            "Инвестиции сегодня: ${bagResult.yearsAndResults[1]!!.sum}",
+            "Инвестиции сегодня: $str1",
             style = MaterialTheme.typography.h6,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.padding(8.dp))
+        val str2 = repaySum.toString().formatByNumber(" ")
         Text(
-            text = "Средняя доходность за все время ${if (isRepay) ",\n при пополнении счета на ${repaySum} ежемесячно" else ""}:\n ${
+            text = "Средняя доходность за все время ${if (isRepay) ",\n при пополнении счета на $str2 ежемесячно" else ""}:\n ${
                 String.format(
                     "%2.2f",
                     rate
@@ -213,17 +231,17 @@ fun investCard(
             style = MaterialTheme.typography.subtitle1
         )
         Spacer(modifier = Modifier.padding(8.dp))
-
+        val str3 = (bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate + bagResult.yearsAndResults[lastIdx]!!.afterSum).toString().formatByNumber(" ")
         Text(
-            text = "Через $months месяцев вы получите:\n ${bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate}",
+            text = "Через $months месяцев вы получите:\n $str3",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.subtitle1
         )
         Spacer(modifier = Modifier.padding(8.dp))
-
+        val str4 = (bagResult.yearsAndResults[lastIdx]!!.rate).toString().formatByNumber(" ")
         Text(
-            text = "Прибыль составит:\n ${bagResult.yearsAndResults[lastIdx]!!.rate}",
+            text = "Прибыль составит:\n $str4",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.subtitle1

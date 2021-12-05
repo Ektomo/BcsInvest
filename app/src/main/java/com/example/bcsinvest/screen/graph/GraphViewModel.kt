@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bcsinvest.data.*
 import com.example.bcsinvest.gate.Gate
+import hu.ma.charts.bars.data.HorizontalBarsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.lang.IllegalStateException
@@ -14,6 +15,7 @@ import kotlin.math.nextDown
 import kotlin.math.roundToInt
 
 class GraphViewModel: ViewModel() {
+    val date = LocalDate.now()
     val gate = Gate.getInstance()
     val investPeriod = MutableLiveData(36f)
     val investSum = MutableLiveData(100000f)
@@ -23,6 +25,32 @@ class GraphViewModel: ViewModel() {
     val regularSum = MutableLiveData(0f)
     val needLoad = MutableLiveData(false)
     val curState = MutableLiveData<State>(State.Default)
+    val mapBars = mutableMapOf<BagResult, List<HorizontalBarsData>>()
+
+
+//    fun getBarsBy(bagResult: BagResult): List<HorizontalBarsData>{
+//
+//        if (mapBars[bagResult] != null){
+//            return mapBars[bagResult]!!
+//        }else{
+//            bagResult.yearsAndResults.forEach { (t, u) ->
+//                bars.add(
+//                    HorizontalBarsData(
+//                        bars = createBars(
+//                            mapOf(
+//                                "${date.year + t - 1}" to listOf(
+//                                    u.sum,
+//                                    u.rate,
+//                                    u.afterSum
+//                                )
+//                            ), nameList1
+//                        )
+//                    )
+//                )
+//            }
+//        }
+//
+//    }
 
 
 
@@ -158,12 +186,14 @@ class GraphViewModel: ViewModel() {
                     cs.count += sCs.count
                 }
                 if (i == months - 1 && i % 12 != 0){
-                    yearsCount++
                     rate = bag.sumOf { it.rateProc } / bag.count()
                     val rateC = (mainS / 100 * rate).roundToInt()
                     val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
                     mainS += rateC
-                    yearsAndResults[yearsCount] = res
+                    val fin = yearsAndResults[yearsCount]
+                    fin!!.afterSum = res.afterSum
+                    fin.rate = res.rate
+                    fin.sum = res.sum
                 }
             }
 
