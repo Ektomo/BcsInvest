@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 
 import com.example.bcsinvest.screen.LoadingView
+import java.lang.IllegalStateException
 
 
 @Composable
@@ -34,7 +35,7 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                 Text(text = state.e.localizedMessage ?: state.e.message!!)
             }
             else ->{
-
+                throw IllegalStateException("Невозможное состояние")
             }
         }
 
