@@ -22,6 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bcsinvest.navigation.NavigationItem
+import com.example.bcsinvest.screen.graph.GraphViewModel
+import com.example.bcsinvest.screen.graph.NewGraphView
 import com.example.bcsinvest.screen.settings.SettingsView
 import com.example.bcsinvest.screen.settings.SettingsViewModel
 import com.example.bcsinvest.ui.theme.BcsInvestTheme
@@ -30,6 +32,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 class MainActivity : ComponentActivity() {
 
     val settingsViewModel: SettingsViewModel by viewModels()
+    val graphViewModel: GraphViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -81,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 Spacer(Modifier.weight(0.5f, true))
                                 IconButton(onClick = {
-                                    navController.navigate(NavigationItem.Graph.route) {
+                                    navController.navigate(NavigationItem.Graphic.route) {
                                         launchSingleTop = true
                                     }
                                 }) {
@@ -100,7 +103,10 @@ class MainActivity : ComponentActivity() {
                         startDestination = NavigationItem.Settings.route
                     ) {
                         composable(NavigationItem.Settings.route) {
-                            SettingsView(navController, settingsViewModel)
+                            SettingsView(navController, settingsViewModel, graphViewModel)
+                        }
+                        composable(NavigationItem.Graphic.route) {
+                            NewGraphView(navController, graphViewModel)
                         }
                     }
                 }

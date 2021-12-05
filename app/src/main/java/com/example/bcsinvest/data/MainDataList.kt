@@ -73,3 +73,35 @@ data class Security(
     val lotValue: Double?,
 )
 
+enum class InvestCurrency {
+    RUR, USD
+}
+
+sealed class BillType(val value: String) {
+    class IIS() : BillType("ИИС")
+    class Simple() : BillType("Обычный счет")
+}
+
+data class CalculateSecurity(
+    var sumAfter: Int,
+    var onePrice: Double,
+    var count: Int,
+    var period: Int,
+    var security: Security,
+    var rateForCouponTime: Int,
+    var rateProc: Double
+)
+
+data class InvestResult(
+    var sum: Int,
+    var rate: Int,
+    var afterSum: Int,
+    var rateProc: Double
+)
+
+data class BagResult(
+    val yearsAndResults: MutableMap<Int, InvestResult>,
+    val bag: Map<String, Int>,
+    val firstAfterSum: Int
+)
+

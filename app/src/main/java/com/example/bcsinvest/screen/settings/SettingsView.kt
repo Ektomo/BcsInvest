@@ -12,11 +12,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.bcsinvest.data.BillType
+import com.example.bcsinvest.data.InvestCurrency
 import com.example.bcsinvest.format
 import com.example.bcsinvest.formatByNumber
+import com.example.bcsinvest.navigation.NavigationItem
+import com.example.bcsinvest.screen.graph.GraphViewModel
 
 @Composable
-fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
+fun SettingsView(navController: NavController, viewModel: SettingsViewModel, graphViewModel: GraphViewModel) {
     val investPeriod = viewModel.investPeriod.observeAsState()
     val investSum = viewModel.investSum.observeAsState()
     val currency = viewModel.currency.observeAsState()
@@ -26,9 +30,9 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
     val startLoading = remember {
         mutableStateOf(false)
     }
-    val yearPeriod = remember {
-        mutableStateOf(viewModel.investPeriod.value?.div(12).toString())
-    }
+//    val yearPeriod = remember {
+//        mutableStateOf(viewModel.investPeriod.value?.div(12).toString())
+//    }
 
     LazyColumn(
         modifier = Modifier
@@ -59,7 +63,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
             Slider(
                 value = investPeriod.value!!,
                 onValueChange = { viewModel.investPeriod.value = it },
-                valueRange = if(billType.value!!.value == "ИИС") 36f..120f else 0f..120f,
+                valueRange = if (billType.value!!.value == "ИИС") 36f..120f else 0f..120f,
             )
         }
 
@@ -111,7 +115,11 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
                 textAlign = TextAlign.Start,
                 fontSize = 18.sp
             )
-            SwitchValueBill(list = listOf(BillType.IIS().value, BillType.Simple().value), billType, viewModel)
+            SwitchValueBill(
+                list = listOf(BillType.IIS().value, BillType.Simple().value),
+                billType,
+                viewModel
+            )
         }
 
 
@@ -124,7 +132,8 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
                     onCheckedChange = {
                         viewModel.isRegularUp.value = !viewModel.isRegularUp.value!!
                     },
-                modifier = Modifier.padding(start = 8.dp))
+                    modifier = Modifier.padding(start = 8.dp)
+                )
                 Spacer(modifier = Modifier.padding(4.dp))
                 Text(
                     text = "Регулярное пополнение: ",
@@ -159,7 +168,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
 
         }
 
-        item{
+        item {
 
             Button(onClick = { startLoading.value = true }) {
                 Text(
@@ -177,9 +186,16 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel) {
 
     }
 
-    LaunchedEffect(key1 = startLoading.value){
-        if (startLoading.value){
-            viewModel.getData()
+    LaunchedEffect(key1 = startLoading.value) {
+        if (startLoading.value) {
+            graphViewModel.billType.postValue(billType.value)
+            graphViewModel.currency.postValue(currency.value)
+            graphViewModel.investPeriod.postValue(investPeriod.value)
+            graphViewModel.investSum.postValue(investSum.value)
+            graphViewModel.isRegularUp.postValue(isRegularUp.value)
+            graphViewModel.regularSum.postValue(regularSum.value)
+            graphViewModel.needLoad.postValue(true)
+            navController.navigate(NavigationItem.Graphic.route)
             startLoading.value = false
         }
     }

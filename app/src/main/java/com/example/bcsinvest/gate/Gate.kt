@@ -1,7 +1,7 @@
 package com.example.bcsinvest.gate
 
+import com.example.bcsinvest.data.InvestCurrency
 import com.example.bcsinvest.data.Security
-import com.example.bcsinvest.screen.settings.InvestCurrency
 import com.google.gson.Gson
 import com.google.gson.internal.LinkedTreeMap
 import com.google.gson.reflect.TypeToken
@@ -35,14 +35,6 @@ class Gate {
         return if (response.isSuccessful) {
             val res = Gson().fromJson<HashMap<Any, Any>>(response.body!!.string(), object : TypeToken<HashMap<Any, Any>>(){}.type)
             parseList(res)
-//            val r = format.decodeFromString<MainData>(response.body!!.string())
-
-            //                val tempMap = mutableMapOf<String, Any>()
-//                list.forEachIndexed{idx, d ->
-//                    tempMap[columns[idx]] = d
-//                }
-//                result.add(tempMap)
-
         } else {
             throw IllegalStateException("Не удалось выполнить запрос")
         }
@@ -55,7 +47,7 @@ class Gate {
     private fun parseList(r1: HashMap<Any, Any>): MutableList<Security> {
         val sec = r1["securities"] as LinkedTreeMap<String, *>
         //            val columns = sec["columns"] as List<String>
-        val data = sec["data"] as List<List<Any>>
+        val data = sec["data"] as List<List<Any?>>
         val r = mutableListOf<Security>()
         data.forEach { list ->
             val security = Security(
@@ -77,7 +69,7 @@ class Gate {
                 couponPeriod = if (list[15] == null) null else (list[15] as Double).roundToInt(),
                 issueSize = if (list[16] == null) null else (list[16] as Double).roundToInt(),
                 prevLegalClosePrice = list[17] as Double?,
-                prevAdmittedQuote = list[18] as Double,
+                prevAdmittedQuote = list[18] as Double?,
                 prevDate = list[19] as String?,
                 secName = list[20] as String?,
                 remarks = list[21] as String?,
