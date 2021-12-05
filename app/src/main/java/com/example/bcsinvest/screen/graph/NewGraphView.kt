@@ -151,7 +151,7 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
 
                 }
             }
-            is GraphViewModel.State.Error -> {
+            is GraphViewModel.State.Error ->  {
                 Text(text = state.e.localizedMessage ?: "Неизвестная ошибка")
 
             }
