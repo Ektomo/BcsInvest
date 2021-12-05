@@ -17,12 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.ui.graphics.imageFromResource
+import androidx.ui.res.vectorResource
 import com.example.bcsinvest.navigation.NavigationItem
 import com.example.bcsinvest.screen.graph.GraphViewModel
 import com.example.bcsinvest.screen.graph.NewGraphView
@@ -59,7 +63,7 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(context, " Форма Оставить заявку", Toast.LENGTH_SHORT).show()
                             }
                             ) {
-                                Icon(Icons.Default.Send, contentDescription = "Создать новую")
+                                Icon(ImageVector.vectorResource(id = R.drawable.ic_assignment), contentDescription = "Создать новую")
 
                             }
 
@@ -82,7 +86,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }) {
                                     Icon(
-                                        Icons.Filled.Search,
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_create),
                                         contentDescription = "Localized description",
                                     )
                                 }
@@ -93,7 +97,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }) {
                                     Icon(
-                                        Icons.Filled.AccountBox,
+                                        ImageVector.vectorResource(id = R.drawable.ic_wallet),
                                         contentDescription = "Localized description",
                                     )
                                 }
