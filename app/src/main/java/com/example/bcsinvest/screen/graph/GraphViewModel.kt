@@ -204,14 +204,16 @@ class GraphViewModel : ViewModel() {
                     cs.rateForCouponTime = sCs.rateForCouponTime
                     cs.count += sCs.count
                 }
-                if (i == months && i % 12 != 0L) {
-                    yearsCount++
-                    rate = bag.sumOf { it.rateProc } / bag.count()
-                    val rateC = (mainS / 100 * rate).roundToLong()
-                    val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
-                    mainS += rateC
-                    yearsAndResults[yearsCount] = res
-                }
+
+            }
+
+            if (i == months && i % 12 != 0L) {
+                yearsCount++
+                rate = bag.sumOf { it.rateProc } / bag.count()
+                val rateC = (mainS / 100 * rate).roundToLong()
+                val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
+                mainS += rateC
+                yearsAndResults[yearsCount] = res
             }
 
 

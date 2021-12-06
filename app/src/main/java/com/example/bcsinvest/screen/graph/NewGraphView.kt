@@ -81,7 +81,6 @@ private fun createBars(
 @Composable
 fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewModel) {
 
-    val date = LocalDate.now()
     val curState = graphViewModel.curState.observeAsState()
     val needLoad = graphViewModel.needLoad.observeAsState()
 
@@ -110,8 +109,11 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                         val nameList = mutableListOf<String>()
                         val nameList1 = listOf("Тело", "Прибыль", "Остаток")
                         state.data.bag.forEach { (t, u) ->
-                            list.add(u)
-                            nameList.add(t)
+                            if (u > 0){
+                                list.add(u)
+                                nameList.add(t)
+                            }
+
                         }
                         val data = HorizontalBarsData(
                             bars = createBars(mapOf("Состав портфеля" to list), nameList)
@@ -231,7 +233,7 @@ fun investCard(
         Spacer(modifier = Modifier.padding(8.dp))
         val str2 = repaySum.toString().formatByNumber(" ")
         Text(
-            text = "Средняя доходность за все время ${if (isRepay) ",\n при пополнении счета на $str2 $cur ежемесячно" else ""}:\n ${
+            text = "Средняя доходность каждого года ${if (isRepay) ",\n при пополнении счета на $str2 $cur ежемесячно" else ""}:\n ${
                 String.format(
                     "%2.2f",
                     rate
@@ -252,7 +254,7 @@ fun investCard(
             style = MaterialTheme.typography.subtitle1
         )
         Spacer(modifier = Modifier.padding(8.dp))
-        val str4 = (bagResult.yearsAndResults.values.sumOf { it.rate }).toString().formatByNumber(" ")
+        val str4 = (bagResult.yearsAndResults.values.sumOf { it.rate } + bagResult.yearsAndResults[lastIdx]!!.afterSum).toString().formatByNumber(" ")
         Text(
             text = "Прибыль составит:\n $str4 $cur",
             modifier = Modifier.fillMaxWidth(),
