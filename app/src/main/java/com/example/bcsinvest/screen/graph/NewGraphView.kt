@@ -57,7 +57,7 @@ val SimpleColors = listOf(
 
 
 private fun createBars(
-    map: Map<String, List<Int>>,
+    map: Map<String, List<Long>>,
     categories: List<String>
 ): List<StackedBarData> {
     val mm = mutableListOf<StackedBarData>()
@@ -106,7 +106,7 @@ fun NewGraphView(navController: NavHostController, graphViewModel: GraphViewMode
                     item {
 
 
-                        val list = mutableListOf<Int>()
+                        val list = mutableListOf<Long>()
                         val nameList = mutableListOf<String>()
                         val nameList1 = listOf("Тело", "Прибыль", "Остаток")
                         state.data.bag.forEach { (t, u) ->
@@ -243,7 +243,7 @@ fun investCard(
         )
         Spacer(modifier = Modifier.padding(8.dp))
         val str3 =
-            (bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate).toString()
+            (bagResult.yearsAndResults[lastIdx]!!.sum + bagResult.yearsAndResults[lastIdx]!!.rate + bagResult.yearsAndResults[lastIdx]!!.afterSum).toString()
                 .formatByNumber(" ")
         Text(
             text = "Через $months месяцев вы получите:\n $str3 $cur",

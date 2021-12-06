@@ -83,25 +83,25 @@ sealed class BillType(val value: String) {
 }
 
 data class CalculateSecurity(
-    var sumAfter: Int,
+    var sumAfter: Long,
     var onePrice: Double,
     var count: Int,
-    var period: Int,
+    var period: Long,
     var security: Security,
     var rateForCouponTime: Int,
     var rateProc: Double
 )
 
 data class InvestResult(
-    var sum: Int,
-    var rate: Int,
-    var afterSum: Int,
+    var sum: Long,
+    var rate: Long,
+    var afterSum: Long,
     var rateProc: Double
 )
 
 data class BagResult(
     val yearsAndResults: MutableMap<Int, InvestResult>,
-    val bag: Map<String, Int>,
-    val firstAfterSum: Int
+    val bag: Map<String, Long>,
+    val firstAfterSum: Long
 )
 
