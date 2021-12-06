@@ -63,7 +63,7 @@ fun SettingsView(navController: NavController, viewModel: SettingsViewModel, gra
             Slider(
                 value = investPeriod.value!!,
                 onValueChange = { viewModel.investPeriod.value = it },
-                valueRange = if (billType.value!!.value == "ИИС") 36f..120f else 0f..120f,
+                valueRange = if (billType.value!!.value == "ИИС") 36f..120f else 12f..120f,
             )
         }
 
