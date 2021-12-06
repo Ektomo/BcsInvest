@@ -8,7 +8,6 @@ import com.example.bcsinvest.gate.Gate
 import hu.ma.charts.bars.data.HorizontalBarsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.lang.IllegalStateException
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import kotlin.math.nextDown
@@ -124,6 +123,8 @@ class GraphViewModel : ViewModel() {
                 val couponPayment = (security.faceValue / 100 * security.couponPercent)/timeToPayCoupon
                 val allCouponPayments = couponPayment * periodCounts
 
+
+//                val secPrice = ((security.faceValue * (( if ((security.prevPrice ?: 100.0) < 100.0) (security.prevPrice ?: 100.0) else 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
                 val secPrice = ((security.faceValue * ((security.prevPrice
                     ?: 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
                 val nomMP = security.faceValue - secPrice
@@ -143,7 +144,8 @@ class GraphViewModel : ViewModel() {
 //                    security.faceValue
 //                ))) / 2.0
 //                val d = ((f / s + th) / fth) * 100.0
-                return Pair(result, yearRate)
+//                val howMany = ((if (days < couponPeriodLast) days else couponPeriodLast) / 365) * yearRate
+                return Pair(result, result)
             } else return Pair(0.0, 0.0)
         } else {
             throw IllegalStateException("Просроченный купон")

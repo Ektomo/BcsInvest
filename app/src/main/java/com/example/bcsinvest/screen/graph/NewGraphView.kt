@@ -233,7 +233,7 @@ fun investCard(
         Spacer(modifier = Modifier.padding(8.dp))
         val str2 = repaySum.toString().formatByNumber(" ")
         Text(
-            text = "Средняя доходность каждого года ${if (isRepay) ",\n при пополнении счета на $str2 $cur ежемесячно" else ""}:\n ${
+            text = "Средняя доходность ${if (isRepay) ",\n при пополнении счета на $str2 $cur ежемесячно" else ""}:\n ${
                 String.format(
                     "%2.2f",
                     rate
