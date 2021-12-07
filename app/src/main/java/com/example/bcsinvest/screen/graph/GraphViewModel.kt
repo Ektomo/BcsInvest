@@ -173,9 +173,23 @@ class GraphViewModel : ViewModel() {
         var yearS = sum
         val bag = mutableListOf<CalculateSecurity>()
         val now = LocalDate.now()
-        list.forEach {
+        list.forEachIndexed {i, it ->
+            val proc: Double = when (i) {
+                0 -> {
+                    0.6
+                }
+                1 -> {
+                    0.5
+                }
+                2 -> {
+                    0.5
+                }
+                else -> {
+                    1.0
+                }
+            }
             if (s > map[it]!!.faceValue!!) {
-                val calculateResult = calculateSecurity(map[it]!!, s, it.second, now)
+                val calculateResult = calculateSecurity(map[it]!!, s, it.second, now, proc)
                 s = calculateResult.sumAfter
                 bag.add(calculateResult)
             }
@@ -199,6 +213,11 @@ class GraphViewModel : ViewModel() {
 
                 if (i % (cs.period / 30) == 0L && !cs.isClosed) {
                     s += (cs.rateForCouponTime * cs.count)
+                }
+                if (cs.isClosed && !cs.checked){
+                    s += (cs.security.faceValue!!.times(cs.count)).roundToLong()
+                    mainS -= ((cs.security.faceValue!! * cs.count) * cs.security.prevPrice!! / 100).roundToLong()
+                    cs.checked = true
                 }
 
             }
@@ -348,7 +367,8 @@ class GraphViewModel : ViewModel() {
         security: Security,
         sum: Long,
         rate: Double,
-        today: LocalDate
+        today: LocalDate,
+        maxProc: Double = 1.0
     ): CalculateSecurity {
 
         if (security.faceValue != null) {
@@ -387,8 +407,10 @@ class GraphViewModel : ViewModel() {
             val rateForCouponTime = ((365 / period) * couponPayment)
 
             val countCanBuy =
-                ((sum / (onePrice * (security.lotSize
-                    ?: 1))) / (security.lotSize ?: 1)).toInt()
+                (((sum / (onePrice * (security.lotSize
+                    ?: 1))) / (security.lotSize ?: 1)).toInt() * maxProc).roundToInt()
+
+
 
             val sumAfter = (sum - (countCanBuy * onePrice).roundToInt())
 

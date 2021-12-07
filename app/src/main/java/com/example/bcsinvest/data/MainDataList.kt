@@ -92,7 +92,8 @@ data class CalculateSecurity(
     var rateForCouponTime: Int,
     var rateProc: Double,
     var matDate: LocalDate,
-    var isClosed: Boolean
+    var isClosed: Boolean,
+    var checked: Boolean = false
 )
 
 data class InvestResult(
