@@ -59,7 +59,7 @@ class GraphViewModel : ViewModel() {
                 curState.postValue(State.Loading)
                 val sum = investSum.value!!.roundToLong()
                 val period = investPeriod.value!!.toLong()
-                val map = mutableMapOf<Pair<Double,Double>, Security>()
+                val map = mutableMapOf<Pair<Double, Double>, Security>()
                 val monthlyRepay = if (isRegularUp.value!!) regularSum.value!!.toInt() else 0
                 val curr = currency.value!!
 
@@ -75,6 +75,7 @@ class GraphViewModel : ViewModel() {
                 }
                 if (filterList.isNotEmpty()) {
                     filterList.forEach {
+//                        someCalculateFun(period, it, monthlyRepay)
                         val d = parseSecurity(it, period * 30, LocalDate.now())
                         if (d.first > 0) {
                             map[d] = it
@@ -101,7 +102,11 @@ class GraphViewModel : ViewModel() {
         }
     }
 
-    fun parseSecurity(security: Security, days: Long, today: LocalDate = LocalDate.now()): Pair<Double, Double> {
+    fun parseSecurity(
+        security: Security,
+        days: Long,
+        today: LocalDate = LocalDate.now()
+    ): Pair<Double, Double> {
         if (security.faceValue != null) {
 
             if (security.couponPercent != null) {
@@ -112,25 +117,27 @@ class GraphViewModel : ViewModel() {
                 val couponPeriod = security.couponPeriod
                 val couponPeriodLast = ChronoUnit.DAYS.between(today, matDate)
                 val needPeriod: Long =
-                    if (couponPeriodLast > days){
-                    days
-                }else{
-                    couponPeriodLast
-                }
+                    if (couponPeriodLast > days) {
+                        days
+                    } else {
+                        couponPeriodLast
+                    }
 
-                val periodCounts = (needPeriod.toDouble()/couponPeriod!!.toDouble()).roundToInt()
+                val periodCounts = (needPeriod.toDouble() / couponPeriod!!.toDouble()).roundToInt()
                 val timeToPayCoupon = (360.0 / security.couponPeriod).roundToInt()
-                val couponPayment = (security.faceValue / 100 * security.couponPercent)/timeToPayCoupon
+                val couponPayment =
+                    (security.faceValue / 100 * security.couponPercent) / timeToPayCoupon
                 val allCouponPayments = couponPayment * periodCounts
 
 
 //                val secPrice = ((security.faceValue * (( if ((security.prevPrice ?: 100.0) < 100.0) (security.prevPrice ?: 100.0) else 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
-                val secPrice = ((security.faceValue * ((security.prevPrice
-                    ?: 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
+                val secPrice = (security.faceValue * ((security.prevPrice
+                    ?: 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0)
+//                        (if (isCalculate) (security.accRuEdInt ?: 0.0) else 0.0)
                 val nomMP = security.faceValue - secPrice
-                val result = ((nomMP + allCouponPayments)/secPrice) * (365.0/needPeriod.toDouble()*100)
+                val result =
+                    ((nomMP + allCouponPayments) / secPrice) * (365.0 / needPeriod.toDouble() * 100)
                 val yearRate = (result / (needPeriod.toDouble() / 365))
-
 
 
 //                val f = security.faceValue - (((security.prevPrice
@@ -144,7 +151,8 @@ class GraphViewModel : ViewModel() {
 //                    security.faceValue
 //                ))) / 2.0
 //                val d = ((f / s + th) / fth) * 100.0
-//                val howMany = ((if (days < couponPeriodLast) days else couponPeriodLast) / 365) * yearRate
+                val howMany =
+                    ((if (days < couponPeriodLast) days else couponPeriodLast) / 365) * yearRate
                 return Pair(result, result)
             } else return Pair(0.0, 0.0)
         } else {
@@ -162,6 +170,7 @@ class GraphViewModel : ViewModel() {
     ): BagResult {
         var mainS = sum
         var s = sum
+        var yearS = sum
         val bag = mutableListOf<CalculateSecurity>()
         val now = LocalDate.now()
         list.forEach {
@@ -186,9 +195,12 @@ class GraphViewModel : ViewModel() {
         for (i in 1..months) {
 
             bag.forEach { cs ->
-                if (i % (cs.period / 30) == 0L) {
+
+
+                if (i % (cs.period / 30) == 0L && !cs.isClosed) {
                     s += (cs.rateForCouponTime * cs.count)
                 }
+
             }
 
             s += monthRepay
@@ -201,7 +213,8 @@ class GraphViewModel : ViewModel() {
 //                        days = (60 - i) * 30
 //                    )
 //                    cs.rateProc = newD.second
-                    val sCs = calculateSecurity(cs.security, s, cs.rateProc, today = now.plusMonths(i))
+                    val sCs =
+                        calculateSecurity(cs.security, s, cs.rateProc, today = now.plusMonths(i))
                     s = sCs.sumAfter
                     cs.rateForCouponTime = sCs.rateForCouponTime
                     cs.count += sCs.count
@@ -212,9 +225,13 @@ class GraphViewModel : ViewModel() {
             if (i == months && i % 12 != 0L) {
                 yearsCount++
                 rate = bag.sumOf { it.rateProc } / bag.count()
+                val tempS =
+                    bag.sumOf { (it.security.faceValue!! * it.count) * it.security.prevPrice!! / 100 }
+                val tTempS = (tempS - mainS).roundToLong()
+                val mainRate = (tTempS.toDouble() / mainS * 100)
                 val rateC = (mainS / 100 * rate).roundToLong()
-                val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
-                mainS += rateC
+                val res = InvestResult(sum = mainS, tTempS, afterSum = s, mainRate)
+                mainS += tTempS
                 yearsAndResults[yearsCount] = res
             }
 
@@ -222,10 +239,15 @@ class GraphViewModel : ViewModel() {
 
             if (i % 12 == 0L) {
                 yearsCount++
+//                rate =
                 rate = bag.sumOf { it.rateProc } / bag.count()
+                val tempS =
+                    bag.sumOf { (it.security.faceValue!! * it.count) * it.security.prevPrice!! / 100 }
+                val tTempS = (tempS - mainS).roundToLong()
+                val mainRate = (tTempS.toDouble() / mainS * 100)
                 val rateC = (mainS / 100 * rate).roundToLong()
-                val res = InvestResult(sum = mainS, rateC, afterSum = s, rate)
-                mainS += rateC
+                val res = InvestResult(sum = mainS, tTempS, afterSum = s, mainRate)
+                mainS += tTempS
                 yearsAndResults[yearsCount] = res
             }
 
@@ -237,17 +259,113 @@ class GraphViewModel : ViewModel() {
         return BagResult(yearsAndResults = yearsAndResults, firstBag, firstAfterSum)
     }
 
-    fun calculateSecurity(security: Security, sum: Long, rate: Double, today: LocalDate): CalculateSecurity {
+//    fun someCalculateFun(period: Long, security: Security, monthRepay: Int): MutableMap<Int, InvestResult> {
+//
+//        val yearsAndResults = mutableMapOf<Int, InvestResult>()
+//        var yearsCount = 0
+//        val onePrice = ((security.faceValue!! * ((security.prevPrice
+//            ?: 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
+//        val matDate = LocalDate.parse(security.matDate)
+//        val couponPeriodLast = ChronoUnit.MONTHS.between(LocalDate.now(), matDate)
+//        val months = if (couponPeriodLast > period) period else couponPeriodLast
+//
+//
+//        val period = security.couponPeriod!!.toLong()
+//        val timeToPayCoupon = (360.0 / security.couponPeriod).roundToInt()
+//        val couponPayment =
+//            ((security.faceValue / 100 * (security.couponPercent ?: 0.0)) / timeToPayCoupon).roundToInt()
+//
+//        var sum = onePrice * (security.lotSize ?: 1) * 100
+//        var mainS = sum
+//        var countCanBuy =
+//            ((sum / (onePrice * (security.lotSize
+//                ?: 1))) / (security.lotSize ?: 1)).toInt()
+//        var count = countCanBuy
+//
+//        sum = (sum - (countCanBuy * onePrice).roundToInt())
+//
+//
+//        for (i in 1..months) {
+//
+//            if ((i % period / 30) == 0L) {
+//
+//                sum += (couponPayment * count)
+//            }
+//
+//
+//            sum += monthRepay
+//            mainS += monthRepay
+//
+//            if (sum > onePrice) {
+//
+//                countCanBuy =
+//                    ((sum / (onePrice * (security.lotSize
+//                        ?: 1))) / (security.lotSize ?: 1)).toInt()
+//                count += countCanBuy
+//                sum -= (count * onePrice)
+//            }
+//
+//
+//
+//            if (i == months && i % 12 != 0L) {
+//                yearsCount++
+//                val tempS = (security.faceValue * count) * security.prevPrice!! / 100
+//                val tTempS = (tempS - mainS).roundToLong()
+//                val mainRate = (tTempS.toDouble() / mainS * 100)
+//                val res = InvestResult(
+//                    sum = mainS.roundToLong(),
+//                    tTempS,
+//                    afterSum = sum.roundToLong(),
+//                    mainRate
+//                )
+//                mainS += tTempS
+//                yearsAndResults[yearsCount] = res
+//            }
+//
+//
+//
+//            if (i % 12 == 0L) {
+//                yearsCount++
+//                val tempS = (security.faceValue * count) * security.prevPrice!! / 100
+//                val tTempS = (tempS - mainS).roundToLong()
+//                val mainRate = (tTempS.toDouble() / mainS * 100)
+//                val res = InvestResult(
+//                    sum = mainS.roundToLong(),
+//                    tTempS,
+//                    afterSum = sum.roundToLong(),
+//                    mainRate
+//                )
+//                mainS += tTempS
+//                yearsAndResults[yearsCount] = res
+//            }
+//
+//        }
+//
+//        return yearsAndResults
+//    }
+
+    fun calculateSecurity(
+        security: Security,
+        sum: Long,
+        rate: Double,
+        today: LocalDate
+    ): CalculateSecurity {
 
         if (security.faceValue != null) {
+            val now = LocalDate.now()
+            val isCoupon = today != now
+            val matDate = LocalDate.parse(security.matDate)
+            val isLast = matDate == today
+//
+//            val onePrice = ((security.faceValue * ( if (isLast) 100.0 else (security.prevPrice
+//                ?: 100.0) / 100.0)) + (if (isCoupon) 0.0 else (security.accRuEdInt ?: 0.0)) )
+            val onePrice = (security.faceValue * (
+                    security.prevPrice
+                ?: 100.0) / 100.0) + (security.accRuEdInt ?: 0.0)
 
 
-            val onePrice = ((security.faceValue * ((security.prevPrice
-                ?: 100.0) / 100.0)) + (security.accRuEdInt ?: 0.0))
 
-
-
-            if(today > LocalDate.parse(security.matDate)){
+            if (today > LocalDate.parse(security.matDate)) {
                 return CalculateSecurity(
                     sumAfter = sum,
                     onePrice = onePrice,
@@ -255,15 +373,18 @@ class GraphViewModel : ViewModel() {
                     period = 0,
                     security = security,
                     rateForCouponTime = 0,
-                    rateProc = rate
+                    rateProc = rate,
+                    matDate = matDate,
+                    isClosed = true
                 )
             }
 
 
             val period = security.couponPeriod!!.toLong()
             val timeToPayCoupon = (360.0 / security.couponPeriod).roundToInt()
-            val couponPayment = (security.faceValue / 100 * security.couponPercent!!)/timeToPayCoupon
-            val rateForCouponTime = ((365 / period) * couponPayment).roundToInt()
+            val couponPayment =
+                ((security.faceValue / 100 * security.couponPercent!!) / timeToPayCoupon).roundToInt()
+            val rateForCouponTime = ((365 / period) * couponPayment)
 
             val countCanBuy =
                 ((sum / (onePrice * (security.lotSize
@@ -280,8 +401,10 @@ class GraphViewModel : ViewModel() {
                 count = countCanBuy,
                 period = period,
                 security = security,
-                rateForCouponTime = rateForCouponTime,
-                rateProc = rate
+                rateForCouponTime = couponPayment,
+                rateProc = rate,
+                matDate = matDate,
+                isClosed = false
             )
 //                }
         } else {

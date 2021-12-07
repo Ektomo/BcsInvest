@@ -4,6 +4,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 
 //data class SecId(
@@ -89,7 +90,9 @@ data class CalculateSecurity(
     var period: Long,
     var security: Security,
     var rateForCouponTime: Int,
-    var rateProc: Double
+    var rateProc: Double,
+    var matDate: LocalDate,
+    var isClosed: Boolean
 )
 
 data class InvestResult(
